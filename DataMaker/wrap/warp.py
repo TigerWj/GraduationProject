@@ -6,25 +6,34 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 def normL1(vector):
     return np.sum(vector*vector, axis=0, keepdims=False)**0.5
 
 def normL2(vector):
     return np.sum(vector*vector, axis=0, keepdims=False)
 
-# local scaling
-# center (x,y)
-# orient (x,y)
+
 def LocalScalingWarps(img, center, orient, level):
-    h,w = img.shape[0], img.shape[1]
+    """
+    @description: local circle area scaling
+    @param: 
+        img: input image
+        center: center of circle area, (x, y) in picture coordinate system
+        orient: any point on the edege of a circle, (x, y) in picture coordinate system
+        level: eoefficient of deformation
+    @Returns: 
+        resImg: warped image
+    """
     resImg = copy.deepcopy(img)
+    h,w = img.shape[0], img.shape[1]
     radius = int(normL1(orient - center)) # float
     top = max(0, center[1] - radius)
     down = min(center[1] + radius, h)
     left = max(0, center[0] - radius)
     right = min(center[0]+ radius, w)
 
-    logging.debug("LocalScalingWarps")
+    logging.info("LocalScalingWarps")
     logging.debug("img shape: {}".format(img.shape))
     logging.debug("center: {}, size: {}".format(center, center.size))
     logging.debug("radius: {}".format(radius))
@@ -52,21 +61,30 @@ def LocalScalingWarps(img, center, orient, level):
         print("Unexpected error:", sys.exc_info()[0])
         assert False
     
+    logging.info("Done")
     return resImg
 
 
-# local translation
-# center (x, y)
-# orient (x, y)
 def LocalTranslationWarps(img, center, radius, orient):
-    h,w = img.shape[0], img.shape[1]
+    """
+    @description: local circle area translation
+    @param:
+        img: input image
+        center: center of circle area, (x, y) in picture coordinate system
+        radius: radius of circle area 
+        orient: point on the edege of a circle, (x, y) in picture coordinate system, vector (orient - center) determine the direction of transformation
+    @Returns:
+        resImg: warped image
+    """
+
     resImg = copy.deepcopy(img)
+    h,w = img.shape[0], img.shape[1]
     top = max(0, center[1] - radius)
     down = min(center[1] + radius, h)
     left = max(0, center[0] - radius)
     right = min(center[0] + radius, w)
 
-    logging.debug("LocalTranslationWarps")
+    logging.info("LocalTranslationWarps")
     logging.debug("img shape: {}".format(img.shape))
     logging.debug("center: {}, size: {}".format(center, center.size))
     logging.debug("radius: {}".format(radius))
@@ -81,6 +99,7 @@ def LocalTranslationWarps(img, center, radius, orient):
                 temp3 = radius * radius
 
                 if temp1 > temp3: continue
+
                 if temp2 < 4*temp3:
                     temp2 = 6.25*temp3
 
@@ -96,17 +115,27 @@ def LocalTranslationWarps(img, center, radius, orient):
         print("Unexpected error:", sys.exc_info()[0])
         assert False
 
+    logging.info("Done")
     return resImg
 
-# vertical scale
-# top int
-# down int
-# level float [0, 2]
+
 def verticalScaleWarps(img, top, down, level):
+    """
+    @description: scale area in vertical direction
+    @param:
+        img: input image
+        top: int
+        down: int
+        level: float, [0, 2]
+    @Returns:
+    """
+    logging.info("verticalScaleWarps")
+
     if top == down : return img
+
     h,w = img.shape[0], img.shape[1]
-    logging.debug(img.dtype)
     resImg = copy.deepcopy(img)
+    logging.debug(img.dtype)
 
     if top < 0 or top >=h or down < 0 or down >= h:
         logging.error("wrong (top, down) which big than img size")
@@ -136,6 +165,7 @@ def verticalScaleWarps(img, top, down, level):
     newPart = cv.resize(oldPart, (w, newDistance), interpolation=cv.INTER_CUBIC)
     resImg[top:newDown, :, :] = newPart
 
+    logging.info("Done")
     return resImg
 
 
@@ -155,10 +185,10 @@ def horizontalScaleWarps(img, left, right, level):
     
     if (left > right): 
         left, right = right, left
-        
-    oldDistance = down - top
+
+    oldDistance = right - left
     newDistance = int(oldDistance*level)
-    newHeight = h - oldDistance + newDistance
+    newWidth = w - oldDistance + newDistance
     newDown = top + newDistance
 
     resImg = np.zeros((newHeight, w, 3), dtype=img.dtype)
@@ -173,4 +203,5 @@ def horizontalScaleWarps(img, left, right, level):
     newPart = cv.resize(oldPart, (w, newDistance), interpolation=cv.INTER_CUBIC)
     resImg[top:newDown, :, :] = newPart
 
+    logging.DEBUG("Done")
     return resImg
