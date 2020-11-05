@@ -1,5 +1,8 @@
 PWD=$(pwd)
+SOURCEDIR=${1}
+rm -rf ./tmp/test_images
 mkdir -p ./tmp/test_images
-cp -r ${sourceDir} ./tmp/test_images
-docker run -it -v ${PWD}/tmp/test_images:/home/U-2-Net/test_data/test_images --name GetTest bigwj/u2net911:test python u2net_test.py
+cp  ${SOURCEDIR}/* ./tmp/test_images
+echo ${SOURCEDIR}
+docker run -it -v ${PWD}/tmp:/home/U-2-Net/test_data --name GetTest bigwj/u2net911:test python u2net_test.py
 docker rm GetTest
