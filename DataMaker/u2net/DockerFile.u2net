@@ -1,0 +1,8 @@
+FROM huicongzhang/pytorch1.3-cuda10-cudnn7
+
+COPY ./U-2-Net /home/U-2-Net
+WORKDIR /home/U-2-Net
+RUN rm -rf ./test_data/test_images/ && \
+    rm -rf ./test_data/u2net_results/ && \
+    rm -rf ./test_data/u2netp_results/
+
