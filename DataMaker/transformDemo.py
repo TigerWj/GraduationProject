@@ -17,7 +17,7 @@ def onMouse(event, x, y, flags, param):
     if event == cv.EVENT_LBUTTONDOWN:
         p.append([x, y])
         cv.drawMarker(img, (x, y), (0,0,0), markerSize=10)
-    elif event == cv.EVENT_RBUTTONDOWN:
+    elif event == cv.EVENT_MBUTTONDOWN:
         q.append([x, y])
         cv.drawMarker(img, (x, y), (255,255,255), markerSize=10)
 
@@ -55,9 +55,40 @@ def loadKeypoints(jsonDir):
     
     return keyPoints
 
+def test(imageDir, keyPointsFileDir):
+    global img
+    p = []
+    q = []
+    img= cv.imread(imageDir)
+
+    keyPoints = loadKeypoints(keyPointsFileDir)
+    for i in range(keyPoints.shape[0]):
+        cv.drawMarker(img, (int(keyPoints[i][0]), int(keyPoints[i][1])), (255, 0, 0), markerType=cv.MARKER_STAR ,markerSize=5)
+
+    cv.namedWindow("image")
+    cv.imshow("image", img)
+
+    if cv.waitKey(0):
+        p.append(keyPoints[1, :2].tolist())
+        q.append(keyPoints[1, :2].tolist())
+        p.append(keyPoints[8, :2].tolist())
+        q.append(keyPoints[8, :2].tolist())
+        p.append([247, 432])
+        
+        
+        for i in [247, 257, 267, 273]:
+            q.append([i, 432])
+            demoOut(mls_rigid_deformation, "Rigid", q, p, imageDir)
+            q.pop()
+
+
 
 if __name__ == "__main__":
     print(sys.argv)
     print("Manually label key points set--Source, and then label some other key points set--Destination in same order")
-    transform(sys.argv[1], sys.argv[2])
+    sourDir = "/home/wj/workspace/GraduationProject/DataMaker/testData/images/{}.jpg".format(sys.argv[1])
+    keyPointDir = "/home/wj/workspace/GraduationProject/DataMaker/testData/openpose_keypoints/{}_keypoints.json".format(sys.argv[1])
+    transform(sourDir, keyPointDir)
+    # test(sourDir, keyPointDir)
+
 

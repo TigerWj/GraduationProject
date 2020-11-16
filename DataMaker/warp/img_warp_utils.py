@@ -100,16 +100,14 @@ def LocalTranslationWarps(img, center, radius, orient):
 
                 if temp1 > temp3: continue
 
-                if temp2 < 4*temp3:
-                    temp2 = 6.25*temp3
+                # if temp2 < 4*temp3:
+                #     temp2 = 100*temp3
 
                 e = (1 - temp2*1.0 / (temp3 - temp1 + temp2))**2
                 source = dest - e*(orient - center)
                 source = np.rint(source).astype(np.int)
                 
                 if source[0] >= 0 and source[0] < w and source[1] >= 0 and source[1] < h :
-                    #resImg[dest[1]][dest[0]] = np.array([0,0,0])
-                    #print(dest, source)
                     resImg[dest[1]][dest[0]] = img[source[1]][source[0]]
     except:
         print("Unexpected error:", sys.exc_info()[0])
@@ -117,6 +115,37 @@ def LocalTranslationWarps(img, center, radius, orient):
 
     logging.info("Done")
     return resImg
+
+
+def LocalRetangleWarps(img, vertexList, centerX, radius, orientX):
+
+    resImg = copy.deepcopy(img)
+    h,w = img.shape[0], img.shape[1]
+    top = vertexList[0]
+    down = vertexList[1]
+    left = vertexList[2]
+    right = vertexList[3]
+
+    for i in range(left, right, 1):
+        for j in range(top, down, 1):
+            dest = np.array([i, j])
+            center = np.array([centerX, j])
+            orient = np.array([orientX, j])
+
+            temp1 = normL2(dest - center)
+            temp2 = normL2(orient - center)
+            temp3 = radius*radius
+
+            e = (1 - temp2*1.0 / (temp3 - temp1 + temp2))**2
+            source = dest - e*(orient - center)
+            source = np.rint(source).astype(np.int)
+
+            if source[0] >= 0 and source[0] < w and source[1] >= 0 and source[1] < h :
+                resImg[dest[1]][dest[0]] = img[source[1]][source[0]]
+
+    logging.info("Done")
+    return resImg
+
 
 
 def verticalScaleWarps(img, top, down, level):
@@ -204,4 +233,68 @@ def horizontalScaleWarps(img, left, right, level):
     resImg[top:newDown, :, :] = newPart
 
     logging.DEBUG("Done")
+    return resImg
+
+
+
+
+def LocalTranslationWarps_(img, center, radius, orient, x1, x2):
+    """
+    @description: local circle area translation
+    @param:
+        img: input image
+        center: center of circle area, (x, y) in picture coordinate system
+        radius: radius of circle area 
+        orient: point on the edege of a circle, (x, y) in picture coordinate system, vector (orient - center) determine the direction of transformation
+    @Returns:
+        resImg: warped image
+    """
+
+    resImg = copy.deepcopy(img)
+    h,w = img.shape[0], img.shape[1]
+    top = max(0, center[1] - radius)
+    down = min(center[1] + radius, h)
+    left = max(0, center[0] - radius)
+    right = min(center[0] + radius, w)
+
+    logging.info("LocalTranslationWarps")
+    logging.debug("img shape: {}".format(img.shape))
+    logging.debug("center: {}, size: {}".format(center, center.size))
+    logging.debug("radius: {}".format(radius))
+    logging.debug("top: {}, down: {}, left: {}, right: {}".format(top, down, left, right))
+
+    try:
+        for i in range(top, down, 1):
+            if orient[1] - center[1] > 0:
+                if i>345 or i < 300 : continue
+            else:
+                if i<335 or i > 380 : continue
+            
+            for j in range(left, right, 1):
+                if j>x2 : continue
+
+
+                dest = np.array([j, i])
+                temp1 = normL2(dest - center)
+                temp2 = normL2(orient - center)
+                temp3 = radius * radius
+
+                if temp1 > temp3: continue
+
+                if temp2 < 4*temp3:
+                    temp2 = 6.25*temp3
+
+                e = (1 - temp2*1.0 / (temp3 - temp1 + temp2))**2
+                source = dest - e*(orient - center)
+                source = np.rint(source).astype(np.int)
+                
+                if source[0] >= 0 and source[0] < w and source[1] >= 0 and source[1] < h :
+                    #resImg[dest[1]][dest[0]] = np.array([0,0,0])
+                    #print(dest, source)
+                    resImg[dest[1]][dest[0]] = img[source[1]][source[0]]
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        assert False
+
+    logging.info("Done")
     return resImg

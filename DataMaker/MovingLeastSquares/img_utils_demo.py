@@ -12,6 +12,7 @@ Image deformation using moving least squares
 import os
 import sys
 import numpy as np
+import cv2 as cv
 import matplotlib.pyplot as plt
 from .img_utils import mls_affine_deformation, mls_similarity_deformation, mls_rigid_deformation
 
@@ -95,6 +96,8 @@ def demoOut(fun, name, inQ, inP, imageDir):
     transformed_image = fun(image, p, q, alpha=1, density=1)
     plt.subplot(122)
     #plt.plot(q[:,0],q[:,1], "bo" )
+    # kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]], np.float32) #定义一个核
+    # dst = cv.filter2D(transformed_image, -1, kernel=kernel)
     plt.axis('off')
     plt.imshow(transformed_image)
     plt.title("%s Deformation" % name)
