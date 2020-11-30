@@ -6,6 +6,7 @@ import numpy as np
 from warp.util import *
 from warp.img_warp_utils import LocalTranslationWarps, verticalScaleWarps
 from warp.img_transform_utils import mls_rigid_deformation
+from warp.mrsl_bk import MRSL
 
 # 局部圆形区域移动变换
 def demoLocalTranslationWarps(imageDir):
@@ -31,6 +32,7 @@ def demoVerticalScaleWarps(imageDir):
 def demoGetPoints(imageDir, silImageDir, keyPointsFileDir):
 
     img = cv.imread(imageDir)
+    imgTemp = copy.deepcopy(img)
     cv.namedWindow("source image")
     cv.imshow("source image", img)
 
@@ -64,7 +66,7 @@ def demoGetPoints(imageDir, silImageDir, keyPointsFileDir):
     destiPoints = []
 
     for l in partIndex:
-        s, d = getIntersection(np.array(pointSet[l][0]), np.array(pointSet[l][1]), binary, leftFlag=True, rightFlag=True, ratioNum=3, ratioIndex=[2,0], gap=2, alpha=1.2)
+        s, d = getIntersection(np.array(pointSet[l][0]), np.array(pointSet[l][1]), binary, leftFlag=True, rightFlag=True, ratioNum=1, ratioIndex=[0], gap=1, alpha=1.2)
         # 聚类 筛除不属于该类别异常点
         realIndex, _ = clusterPoint(np.array(d), pointSet, np.array([l])) 
         sourcePoints += np.array(d)[realIndex].tolist()
@@ -73,16 +75,22 @@ def demoGetPoints(imageDir, silImageDir, keyPointsFileDir):
    
     visualise(silImg, sourcePoints, destiPoints, np.array(keyPoints))
 
-    # msl形变
-    img = mls_rigid_deformation(img, np.array(sourcePoints), np.array(destiPoints))
+    # mls形变
+    # img = mls_rigid_deformation(img, np.array(sourcePoints), np.array(destiPoints), alpha=0.5)
+    img = MRSL(img, np.array(sourcePoints), np.array(destiPoints))
     # img = cv.GaussianBlur(img, (9, 9), 0.6)
 
     cv.namedWindow("warped image")
+    # visualise(img, sourcePoints, destiPoints, np.array(keyPoints))
     cv.imshow("warped image", img)
     cv.waitKey(0)
 
-    # msl 反形变
-    img = mls_rigid_deformation(img, np.array(destiPoints), np.array(sourcePoints))
+    # mls 反形变
+    # img = mls_rigid_deformation(img, np.array(destiPoints), np.array(sourcePoints), alpha=0.5)
+    img = MRSL(img, np.array(destiPoints), np.array(sourcePoints))
+    for i in sourcePoints:
+        img[i[1], i[0]] = imgTemp[i[1], i[0]]
+
     # img = cv.GaussianBlur(img, (9, 9), 0.6)
 
     cv.namedWindow("warped image return")
@@ -114,6 +122,6 @@ if __name__ == "__main__":
     imgDir = "/home/wj/workspace/GraduationProject/DataMaker/testData/images/{}.jpg".format(sys.argv[1])
     silDir = "/home/wj/workspace/GraduationProject/DataMaker/testData/u2net_results/{}.png".format(sys.argv[1])
     keypointDir = "/home/wj/workspace/GraduationProject/DataMaker/testData/openpose_keypoints/{}_keypoints.json".format(sys.argv[1])
-    demoLocalTranslationWarps(imgDir)
-    demoVerticalScaleWarps(imgDir)
+    # demoLocalTranslationWarps(imgDir)
+    # demoVerticalScaleWarps(imgDir)
     demoGetPoints(imgDir, silDir, keypointDir)

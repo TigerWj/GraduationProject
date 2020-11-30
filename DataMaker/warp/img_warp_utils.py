@@ -237,7 +237,6 @@ def horizontalScaleWarps(img, left, right, level):
 
 
 
-
 def LocalTranslationWarps_(img, center, radius, orient, x1, x2):
     """
     @description: local circle area translation
